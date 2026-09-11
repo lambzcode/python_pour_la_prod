@@ -15,7 +15,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build de l'image de test
-        run: docker build -t mon-projet-tests .
+        run: docker build -t mon-projet-tests ./docker-example
 
       - name: Lancer les tests
         run: docker run --rm mon-projet-tests
