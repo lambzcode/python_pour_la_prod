@@ -1,0 +1,21 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout du code
+        uses: actions/checkout@v4
+
+      - name: Build de l'image de test
+        run: docker build -t mon-projet-tests ./docker_example
+
+      - name: Lancer les tests
+        run: docker run --rm mon-projet-tests
