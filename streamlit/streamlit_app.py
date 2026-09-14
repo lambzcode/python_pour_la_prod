@@ -33,26 +33,26 @@ st.caption("Exemple pédagogique pour un cours de Python en production (Streamli
 # --------------------------------------------------------------------------
 st.sidebar.header("⚙️ Paramètres")
 
-fichier_uploade = st.sidebar.file_uploader(
+file_uploader = st.sidebar.file_uploader(
     "Charger un CSV (colonnes: latitude, longitude, ...)", type=["csv"]
 )
 
+
 @st.cache_data
-def charger_donnees(source) -> pd.DataFrame:
+def load_data(source) -> pd.DataFrame:
     """Charge un CSV et vérifie la présence des colonnes latitude/longitude."""
     df = pd.read_csv(source)
     df.columns = [c.strip().lower() for c in df.columns]
     if "latitude" not in df.columns or "longitude" not in df.columns:
-        raise ValueError(
-            "Le CSV doit contenir des colonnes 'latitude' et 'longitude'."
-        )
+        raise ValueError("Le CSV doit contenir des colonnes 'latitude' et 'longitude'.")
     return df
 
+
 # Si l'utilisateur ne charge rien, on utilise le CSV d'exemple fourni
-if fichier_uploade is not None:
-    df = charger_donnees(fichier_uploade)
+if file_uploader is not None:
+    df = load_data(file_uploader)
 else:
-    df = charger_donnees("streamlit/donnees.csv")
+    df = load_data("streamlit/donnees.csv")
     st.sidebar.info("Aucun fichier chargé : utilisation de `donnees.csv` (exemple).")
 
 st.sidebar.write(f"**{len(df)}** points chargés")
@@ -60,56 +60,40 @@ st.sidebar.write(f"**{len(df)}** points chargés")
 # --------------------------------------------------------------------------
 # 2. Réglages d'affichage (widgets interactifs)
 # --------------------------------------------------------------------------
-rayon_points = st.sidebar.slider("Taille des points (m)", 500, 20000, 4000, step=500)
-opacite = st.sidebar.slider("Opacité des points", 0.1, 1.0, 0.8)
+radius_points = st.sidebar.slider("Taille des points (m)", 500, 20000, 4000, step=500)
+opacity = st.sidebar.slider("Opacité des points", 0.1, 1.0, 0.8)
 style_fond = st.sidebar.selectbox(
     "Fond de carte",
     options=["OpenStreetMap (clair)", "OpenStreetMap (standard)"],
 )
 
-# Tuiles OpenStreetMap : on les fournit nous-mêmes via TileLayer
-# (pas besoin de jeton Mapbox/Carto)
-url_tuiles = (
-    "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-    if style_fond == "OpenStreetMap (standard)"
-    else "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
-)
-
-couche_fond = pdk.Layer(
-    "TileLayer",
-    data=url_tuiles,
-    min_zoom=0,
-    max_zoom=19,
-    tile_size=256,
-)
-
 # --------------------------------------------------------------------------
 # 3. Filtre optionnel sur une colonne numérique (si présente, ex: "valeur")
 # --------------------------------------------------------------------------
-colonnes_numeriques = [
+numerical_columns = [
     c for c in df.select_dtypes("number").columns if c not in ("latitude", "longitude")
 ]
 
-df_filtre = df
-if colonnes_numeriques:
-    col_filtre = st.sidebar.selectbox("Filtrer sur la colonne", ["(aucun)"] + colonnes_numeriques)
+df_filtered = df
+if numerical_columns:
+    col_filtre = st.sidebar.selectbox(
+        "Filtrer sur la colonne", ["(aucun)"] + numerical_columns
+    )
     if col_filtre != "(aucun)":
         vmin, vmax = float(df[col_filtre].min()), float(df[col_filtre].max())
-        seuil = st.sidebar.slider(
-            f"Seuil minimum — {col_filtre}", vmin, vmax, vmin
-        )
-        df_filtre = df[df[col_filtre] >= seuil]
+        seuil = st.sidebar.slider(f"Seuil minimum — {col_filtre}", vmin, vmax, vmin)
+        df_filtered = df[df[col_filtre] >= seuil]
 
 # --------------------------------------------------------------------------
 # 4. Couche de points (ScatterplotLayer)
 # --------------------------------------------------------------------------
 couche_points = pdk.Layer(
     "ScatterplotLayer",
-    data=df_filtre,
+    data=df_filtered,
     get_position="[longitude, latitude]",
-    get_radius=rayon_points,
+    get_radius=radius_points,
     get_fill_color="[200, 30, 0, 160]",
-    opacity=opacite,
+    opacity=opacity,
     pickable=True,
     stroked=True,
     get_line_color=[255, 255, 255],
@@ -119,9 +103,9 @@ couche_points = pdk.Layer(
 # --------------------------------------------------------------------------
 # 5. Vue initiale (centrée sur le barycentre des points)
 # --------------------------------------------------------------------------
-vue_initiale = pdk.ViewState(
-    latitude=df_filtre["latitude"].mean() if len(df_filtre) else 46.6,
-    longitude=df_filtre["longitude"].mean() if len(df_filtre) else 2.2,
+initial_view = pdk.ViewState(
+    latitude=df_filtered["latitude"].mean() if len(df_filtered) else 46.6,
+    longitude=df_filtered["longitude"].mean() if len(df_filtered) else 2.2,
     zoom=5,
     pitch=0,
 )
@@ -134,7 +118,7 @@ texte_infobulle += "<br/><b>lat/lon</b>: {latitude}, {longitude}"
 carte = pdk.Deck(
     map_style=None,
     layers=[couche_points],
-    initial_view_state=vue_initiale,
+    initial_view_state=initial_view,
     tooltip={"html": texte_infobulle} if colonnes_infobulle else True,
     map_provider=None,  # on n'utilise pas de fond Mapbox/Carto natif, mais nos tuiles OSM
 )
@@ -148,15 +132,19 @@ with col1:
     st.pydeck_chart(carte, use_container_width=True)
 
 with col2:
-    st.metric("Points affichés", len(df_filtre))
-    if colonnes_numeriques:
+    st.metric("Points affichés", len(df_filtered))
+    if numerical_columns:
         st.metric(
-            f"Moyenne ({colonnes_numeriques[0]})",
-            round(df_filtre[colonnes_numeriques[0]].mean(), 1) if len(df_filtre) else "—",
+            f"Moyenne ({numerical_columns[0]})",
+            (
+                round(df_filtered[numerical_columns[0]].mean(), 1)
+                if len(df_filtered)
+                else "—"
+            ),
         )
 
 st.subheader("📋 Données")
-st.dataframe(df_filtre, use_container_width=True, hide_index=True)
+st.dataframe(df_filtered, use_container_width=True, hide_index=True)
 
 st.caption(
     "Fond de carte : © contributeurs OpenStreetMap — tuiles servies via TileLayer pydeck."

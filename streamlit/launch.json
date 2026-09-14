@@ -1,0 +1,24 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+
+        {
+            "name": "Debug streamlit",
+            "type": "debugpy",
+            "request": "launch",
+            "python": "${workspaceFolder}/.venv/bin/python",
+            // Équivaut à : python -m streamlit run streamlit_app.py
+            "module": "streamlit",
+            "args": [
+                "run",
+                "${workspaceFolder}/IADATA700 - Python/slides/streamlit/streamlit_app.py",
+                "--server.headless=true",
+                "--server.runOnSave=false"
+            ],
+            "console": "integratedTerminal"
+        }
+    ]
+}
