@@ -52,7 +52,7 @@ def charger_donnees(source) -> pd.DataFrame:
 if fichier_uploade is not None:
     df = charger_donnees(fichier_uploade)
 else:
-    df = charger_donnees("donnees.csv")
+    df = charger_donnees("streamlit/donnees.csv")
     st.sidebar.info("Aucun fichier chargé : utilisation de `donnees.csv` (exemple).")
 
 st.sidebar.write(f"**{len(df)}** points chargés")
