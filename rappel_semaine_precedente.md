@@ -152,5 +152,5 @@ ___
 * Toutes ces bonnes pratiques permettent d'avoir une base de travail commune pour permettre un travail collaboratif
 * Afin de partager votre code et de contribuer sur un projet, des outils de gestions de version comme `Git` permettent de travailler à plusieurs
 * `git init` pour initialiser un projet, `git add` pour ajouter des modifications à mon projet et `git commit` pour les valider
-* Si je développe une nouvelle feature, je crée une branche avec `git switch -c ma_super_branche`²z
+* Si je développe une nouvelle feature, je crée une branche avec `git switch -c ma_super_branche`
 * Pour travailler avec des repos distants: `git clone`, `git fetch`, `git pull`
