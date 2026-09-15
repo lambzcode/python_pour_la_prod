@@ -1,7 +1,7 @@
 # Projet : création d'une webapp Streamlit d'analyse de données
 
 **Groupe** : 3-5 personnes par groupe
-**Deadline** : 1er décembre à 23h59
+**Deadline** : 20 novembre à 23h59
 
 ---
 
