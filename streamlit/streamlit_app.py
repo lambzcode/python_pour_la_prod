@@ -149,3 +149,15 @@ st.dataframe(df_filtered, use_container_width=True, hide_index=True)
 st.caption(
     "Fond de carte : © contributeurs OpenStreetMap — tuiles servies via TileLayer pydeck."
 )
+import requests
+params = (
+    ('limit', '20'),
+)
+
+response = requests.get('https://ressources.data.sncf.com/api/explore/v2.1/catalog/datasets/regularite-mensuelle-tgv-aqst/records', params=params)
+
+#NB. Original query string below. It seems impossible to parse and
+#reproduce query strings 100% accurately so the one below is given
+#in case the reproduced version is not "correct".
+# response = requests.get('https://ressources.data.sncf.com/api/explore/v2.1/catalog/datasets/regularite-mensuelle-tgv-aqst/records?limit=20', headers=headers, cookies=cookies)
+st.write(response.json())
